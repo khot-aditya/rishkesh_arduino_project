@@ -24,8 +24,8 @@ dht11 DHT11; // create DHT11 object
 #define SERVER_IP "https://smartirregation.000webhostapp.com/addrecord.php"
 
 #ifndef STASSID // if SSID is not defined then define it here
-#define STASSID "SSID" // replace this with your wifi name (case sensitive)
-#define STAPSK "PASSWORD" // replace this with your wifi password (case sensitive)
+#define STASSID "realme 6" // replace this with your wifi name (case sensitive)
+#define STAPSK "123456789" // replace this with your wifi password (case sensitive)
 #endif // end of if SSID is not defined
 
 // define relay output ports
@@ -98,6 +98,8 @@ void loop() {
   Serial.print("Temperature  (C): ");
   Serial.println((float)DHT11.temperature, 2);  // Prints the temperature value, 2 is the number of decimal places to print
 
+  Serial.print("Rain:");
+  Serial.println(String(is_raining));
 
   // if moisture percent level is below 1.0 then turn on relay
   if (moisture_percentage <= 1.0 /* change this value to calculated moisture level */) {
@@ -162,7 +164,7 @@ void loop() {
     http.end();
   }
 
-  // run this loop every 10 seconds
-  // 10000 ms = 10 seconds
-  delay(10000 /* changing this value will change interation */);
+  // run this loop every 1 minute
+  // 60000 ms = 1 minute
+  delay(60000 /* changing this value will change interation */);
 }
