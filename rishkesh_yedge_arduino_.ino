@@ -24,8 +24,8 @@ dht11 DHT11; // create DHT11 object
 #define SERVER_IP "https://smartirregation.000webhostapp.com/addrecord.php"
 
 #ifndef STASSID // if SSID is not defined then define it here
-#define STASSID "realme 6" // replace this with your wifi name (case sensitive)
-#define STAPSK "123456789" // replace this with your wifi password (case sensitive)
+#define STASSID "Multicraft" // replace this with your wifi name (case sensitive)
+#define STAPSK "89569779276838" // replace this with your wifi password (case sensitive)
 #endif // end of if SSID is not defined
 
 // define relay output ports
@@ -69,8 +69,8 @@ void setup() {
   digitalWrite(RELAY2, HIGH); // turn off relay 2
 }
 
-void SendData(String data) {
-  // wait for WiFi connection
+void SendData(String url, String data, String log) {
+  // wait for WiFi connection 
   if ((WiFi.status() == WL_CONNECTED)) {
 
     // create HTTP client, this will send data to server using HTTP protocol
@@ -79,7 +79,7 @@ void SendData(String data) {
 
     Serial.print("[HTTP] begin...\n"); // print to serial monitor that we are starting HTTP request to server 
     // configure traged server and url
-    http.begin(client, "https://smartirregation.000webhostapp.com/waterpumpstatus.php");  // HTTP server and endpoint to send data.
+    http.begin(client, url);  // HTTP server and endpoint to send data.
     http.addHeader("Content-Type", "application/json"); // set content type to JSON so that server can understand data format
 
     Serial.print("[HTTP] POST...\n"); // print to serial monitor that we are sending POST request to server
@@ -87,12 +87,13 @@ void SendData(String data) {
 
     // start connection and send HTTP header and body
     // httpCode is the response code from server, if it is 200 then it means request was successful
-    int httpCode = http.GET("{\"Status\":" + data + "}");
+    int httpCode = http.POST(data);
 
     //  check if request was successful or not. if successful then print response code to serial monitor and print response body
     if (httpCode > 0) {
       // HTTP header has been send and Server response header has been handled
-      Serial.printf("[HTTP] POST... code: %d\n", httpCode);
+      Serial.print(log);
+      Serial.printf(": [HTTP] POST... code: %d\n", httpCode);
 
       // file found at server
       if (httpCode == HTTP_CODE_OK) {
@@ -150,33 +151,15 @@ void loop() {
     // if state is true then turn on relay
     digitalWrite(RELAY1, LOW);
     digitalWrite(RELAY2, LOW);
-    SendData("On");
+    SendData("http://smartirregation.000webhostapp.com/waterpumpstatus.php", "{\"Status\":\"On\"}", "Relay data");
   } else {
     // else turn off relay
     digitalWrite(RELAY1, HIGH);
     digitalWrite(RELAY2, HIGH);
-    SendData("Off");
+    SendData("http://smartirregation.000webhostapp.com/waterpumpstatus.php", "{\"Status\":\"Off\"}", "Relay data");
   }
 
-  // wait for WiFi connection
-  if ((WiFi.status() == WL_CONNECTED)) {
-
-    // create HTTP client, this will send data to server using HTTP protocol
-    WiFiClient client;
-    HTTPClient http;
-
-    Serial.print("[HTTP] begin...\n"); // print to serial monitor that we are starting HTTP request to server 
-    // configure traged server and url
-    http.begin(client, "http://smartirregation.000webhostapp.com/addrecord.php");  // HTTP server and endpoint to send data.
-    http.addHeader("Content-Type", "application/json"); // set content type to JSON so that server can understand data format
-
-    Serial.print("[HTTP] POST...\n"); // print to serial monitor that we are sending POST request to server
-
-
-    // start connection and send HTTP header and body
-    // httpCode is the response code from server, if it is 200 then it means request was successful
-    int httpCode = http.POST(
-      "{\"SoilValue\":" // soil value in percentage
+  SendData("http://smartirregation.000webhostapp.com/addrecord.php", "{\"SoilValue\":" // soil value in percentage
       + String(moisture_percentage) 
       + ",\"TempValue\":" // temperature value in celsius
       + String((float)DHT11.temperature) 
@@ -184,31 +167,9 @@ void loop() {
       + String((float)DHT11.humidity) 
       + ",\"RainValue\":" // rain value, 1 if raining else 0. if raining then turn off relay
       + String(is_raining) 
-      + "}"
-      );
+      + "}", "Sensor Data");
 
-    //  check if request was successful or not. if successful then print response code to serial monitor and print response body
-    if (httpCode > 0) {
-      // HTTP header has been send and Server response header has been handled
-      Serial.printf("[HTTP] POST... code: %d\n", httpCode);
-
-      // file found at server
-      if (httpCode == HTTP_CODE_OK) {
-
-        // get server response body
-        const String& payload = http.getString();
-        Serial.println("received payload:\n<<"); // print to serial monitor that we are receiving data from server
-        Serial.println(payload); // print data received from server
-        Serial.println(">>"); // print to serial monitor that we have received data from server
-      }
-    } else {
-      // if post request failed then serial output error
-      Serial.printf("[HTTP] POST... failed, error: %s\n", http.errorToString(httpCode).c_str()); // print error to serial monitor
-    }
-
-    // close connection, this will free resources in ESP8266
-    http.end();
-  }
+  
 
   // run this loop every 1 minute
   // 60000 ms = 1 minute
