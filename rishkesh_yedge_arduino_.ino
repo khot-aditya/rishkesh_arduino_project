@@ -24,8 +24,8 @@ dht11 DHT11; // create DHT11 object
 #define SERVER_IP "https://smartirregation.000webhostapp.com/addrecord.php"
 
 #ifndef STASSID // if SSID is not defined then define it here
-#define STASSID "Multicraft" // replace this with your wifi name (case sensitive)
-#define STAPSK "89569779276838" // replace this with your wifi password (case sensitive)
+#define STASSID "wifi name" // replace this with your wifi name (case sensitive)
+#define STAPSK "password" // replace this with your wifi password (case sensitive)
 #endif // end of if SSID is not defined
 
 // define relay output ports
